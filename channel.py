@@ -1,14 +1,15 @@
 import myLib
 import pandas as pd
 import matplotlib.pyplot as plt
+import consts
 
 class channel:
 
-    def __init__(self, dataLoc,patient ,name):
-        self.name = name
+    def __init__(self, patient , channelDir,channel):
+
         self.patient = patient
-        self.patientFolder = f"{dataLoc}\\{patient}\\"
-        self.metadata = pd.read_csv(f"{self.patientFolder}{patient}_{name}_metadata.csv")
+        self.patientFolder = f"{consts.dataLoc}\\{patient}\\"
+        self.metadata = pd.read_csv(f"{self.patientFolder}{patient}_{channelDir}_{channel}_metadata.csv")
         self.metadata.drop(self.metadata.columns.difference(["name","channelGroups.name","channelGroups.sampleRate","segments.duration",
                                                              "segments.startTime","channels.name"]),axis=1,inplace=True)
         self.metadata["segments.stopTime"] = [self.metadata["segments.startTime"][x] + self.metadata["segments.duration"][x]
@@ -16,7 +17,7 @@ class channel:
 
         #This adds a file collumn with the file location
         self.metadata["file"] = [f"{self.patientFolder}\\{self.metadata['channelGroups.name'][x]}\\{self.patient}" \
-                                 f"_{self.name}_segment_{x}.parquet"
+                                 f"_{channelDir}_{channel}_segment_{x}.parquet"
                                  for x in range(len(self.metadata))]
 
         print(self.metadata)
@@ -41,9 +42,9 @@ class channel:
                 else:
                     buildDF = buildDF.append(segment)
             #(buildDF)
-
-            return buildDF[(start <= buildDF["time"])
-                               & (stop >= buildDF["time"])]
+            buildDF.set_index("time",inplace=True)
+            return buildDF[(start <= buildDF.index)
+                               & (stop >= buildDF.index)]
         else:
             return None
 
@@ -66,9 +67,9 @@ class channel:
 #----------------------------------#
 if __name__ == "__main__":
     pd.set_option('display.float_format', lambda x: '%.9f' % x)
-    c = channel("..\\data","MSEL_00172","Empatica-EDA_EDA")
+    c = channel("MSEL_00172","Empatica-EDA","EDA")
     #c.metadata.to_csv(r'test.csv', index=None, sep=',', mode='w')
-    df = c.getData(1556347299281.250000000,1556354486750)
-    df.set_index("time", inplace=True)
+    df = c.getData(1556347299250.250000000,1556350892999)
+    print(f"{len(df) * (1/128)} seconds")
     df.plot()
     plt.show()
