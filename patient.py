@@ -34,7 +34,8 @@ class patient:
             tabSegments.append(buildDF)
         return tabSegments
 
-    def join(self,buildDF,joinDF):
+    @staticmethod
+    def join(buildDF,joinDF):
         if joinDF is None:  # if there is a hole in this channel
             return None
         if buildDF.empty:
