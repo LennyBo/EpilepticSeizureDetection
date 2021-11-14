@@ -1,3 +1,5 @@
+import time
+
 DATA_LOC = r"..\data"
 
 #This is
@@ -28,3 +30,17 @@ Will make it so we do not take any data that is within +/- of each positive labe
 '''
 POSITVE_INTERSECT_SIZE = PREPREDICTION_LENGTH + 60
 
+'''
+Jump size of negative segments
+'''
+WINDOW_SIZE = PREPREDICTION_LENGTH + 7000
+
+'''
+Start offset in s
+'''
+OFFSET = 60
+
+
+EPOCHS = 10
+BATCH_SIZE = 64
+NAME = f"{PREPREDICTION_LENGTH}-S-{int(time.time())}"

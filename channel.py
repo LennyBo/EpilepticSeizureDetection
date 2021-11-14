@@ -23,6 +23,9 @@ class channel:
             self.metadata["segments.startTime"][x] + self.metadata["segments.duration"][x]
             for x in range(len(self.metadata))]
 
+        #Save the stopTime
+        self.stopTime = self.metadata["segments.stopTime"][len(self.metadata["segments.stopTime"]) - 1]
+
         # This adds a file collumn with the file location
         self.metadata["file"] = [f"{self.patientFolder}\\{self.metadata['channelGroups.name'][x]}\\{self.patient}" \
                                  f"_{channelDir}_{channel}_segment_{x}.parquet"
@@ -64,6 +67,7 @@ class channel:
         else:
             return None
 
+
     def getSegment(self, stopTime):
         '''
 
@@ -86,7 +90,7 @@ class channel:
         :param s: A TimeStamp in ms
         :return: The amount of time since start in seconds
         '''
-        return (TS - self.startTime) * 1000
+        return (TS - self.startTime) / 1000
 
     @staticmethod
     def isContinuous(df):
