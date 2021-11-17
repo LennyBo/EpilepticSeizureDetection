@@ -3,7 +3,9 @@ import time
 import os
 import pandas as pd
 import re
-from sklearn import preprocessing
+
+from sklearn.exceptions import NotFittedError
+from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
 import numpy as np
 
@@ -42,6 +44,7 @@ def readParuet(fileLoc):
     df.rename(columns={"data" : match[0]}, inplace = True)
     return df
 
+scaler = StandardScaler()
 
 # TODO finish impl
 def processDF(tab):
@@ -50,11 +53,16 @@ def processDF(tab):
     :return: A x
     """
     # normalize
+
     random.shuffle(tab)
     x = []
     y = np.array([])
     for f, t in tab:
-        x.append(tf.keras.utils.normalize(np.array(f), axis=1))
+        try:
+            x.append(scaler.transform(np.array(f)))
+        except NotFittedError:
+            print("Fitting")
+            x.append(scaler.fit_transform(np.array(f)))
         y = np.append(y, np.uint8(t))
     return np.array(x),y
 

@@ -56,19 +56,20 @@ class patient:
         for s in tqdm(range(consts.OFFSET,endTime,consts.WINDOW_SIZE)): # Iterates over the dataset in window_size (s) jumps
             currTs = self.fromS2TS(s)
             if self.isCloseTooPositve(currTs):
-                print(f"It is close {s}")
-                continue
-            buildDF = pd.DataFrame()
-            for c in self.channels:
-                df = c.getSegment(currTs)
-                if df is not None:
-                    buildDF = self.join(buildDF, df)
-                else:
-                    buildDF = None
-                    #print("Detected missing data")
-                    break
-            if buildDF is not None:
-                tabSegments.append((buildDF,0))
+                #print(f"\n" + Fore.YELLOW + f"{s} seconds is too close to a positve label.\nSkipping to next timestamp")
+                pass
+            else:
+                buildDF = pd.DataFrame()
+                for c in self.channels:
+                    df = c.getSegment(currTs)
+                    if df is not None:
+                        buildDF = self.join(buildDF, df)
+                    else:
+                        buildDF = None
+                        #print("Detected missing data")
+                        break
+                if buildDF is not None:
+                    tabSegments.append((buildDF,0))
         return tabSegments
 
 
@@ -133,6 +134,6 @@ class patient:
 
 if __name__ == "__main__":
     pd.set_option('display.float_format', lambda x: '%.9f' % x)
-    m172 = patient("MSEL_00172")
+    m172 = patient("MSEL_00501")
     df = m172.getLabeledSegments()
 

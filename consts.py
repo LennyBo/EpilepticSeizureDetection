@@ -14,9 +14,7 @@ channels = [(r"Empatica-ACC", r"Acc x"),
             ]
 """
 
-CHANNELS = [(r"Empatica-ACC", r"Acc x"),
-            (r"Empatica-ACC", r"Acc y"),
-            (r"Empatica-ACC", r"Acc z"),
+CHANNELS = [
             (r"Empatica-BVP", r"BVP"),
             (r"Empatica-EDA", r"EDA"),
             (r"Empatica-HR", r"HR"),
@@ -33,16 +31,16 @@ POSITVE_INTERSECT_SIZE = PREPREDICTION_LENGTH + 60
 '''
 Jump size of negative segments
 '''
-WINDOW_SIZE = PREPREDICTION_LENGTH + 7000
+WINDOW_SIZE = PREPREDICTION_LENGTH + 1000
 
 '''
 Start offset in s
 '''
-OFFSET = 60
+OFFSET = 1000
 
-trainPatients = ["MSEL_00172","MSEL_01838"]
-validationPatients = ["MSEL_01838"]
-testPatients = ["MSEL_01808"]
+trainPatients = ["MSEL_00172" ]#,"MSEL_00501","MSEL_01097","MSEL_01575","MSEL_01838","MSEL_01808"]
+validationPatient = "MSEL_01838"
+testPatient = "MSEL_01808"
 
 
 EPOCHS = 10
