@@ -114,7 +114,7 @@ if __name__ == "__main__":
     pd.set_option('display.float_format', lambda x: '%.9f' % x)
     c = channel("MSEL_01808", "Empatica-EDA", "EDA")
     # c.metadata.to_csv(r'test.csv', index=None, sep=',', mode='w')
-    #df = c.getPositiveSegments()
+    df = c.getPositiveSegments()
     for f in df:
         print(len(f))
         #f.plot()

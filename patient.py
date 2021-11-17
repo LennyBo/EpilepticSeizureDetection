@@ -1,10 +1,11 @@
-import random
-
 import pandas as pd
 import channel as c
 import consts
 import matplotlib.pyplot as plt
 import numpy as np
+
+from tqdm import tqdm
+from colorama import Fore
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
@@ -18,6 +19,7 @@ class patient:
 
 
     def __init__(self,patientName):
+        self.patientName = patientName
         self.channels = []
         # Read the labels csv
         self.labels = pd.read_csv(f"{consts.DATA_LOC}\\{patientName}\\{patientName}_labels.csv")
@@ -42,7 +44,7 @@ class patient:
                     buildDF = self.join(buildDF,df)
                 else:
                     buildDF = None
-                    print("Detected missing data")
+                    #print("Detected missing data")
                     break
             if buildDF is not None:
                 tabSegments.append((buildDF,1))
@@ -51,8 +53,7 @@ class patient:
     def getNegativeSegments(self):
         tabSegments = []
         endTime = int(self.fromTS2S(self.stopTime) - consts.OFFSET)
-        for s in range(consts.OFFSET,endTime,consts.WINDOW_SIZE): # TODO replace 7000 with the amount of time of each patient - offset
-            print(f"{round(100/endTime  * s, 1) } %")
+        for s in tqdm(range(consts.OFFSET,endTime,consts.WINDOW_SIZE)): # Iterates over the dataset in window_size (s) jumps
             currTs = self.fromS2TS(s)
             if self.isCloseTooPositve(currTs):
                 print(f"It is close {s}")
@@ -63,7 +64,8 @@ class patient:
                 if df is not None:
                     buildDF = self.join(buildDF, df)
                 else:
-                    print("Detected missing data")
+                    buildDF = None
+                    #print("Detected missing data")
                     break
             if buildDF is not None:
                 tabSegments.append((buildDF,0))
@@ -71,9 +73,8 @@ class patient:
 
 
     def getLabeledSegments(self):
+        print(Fore.BLUE + f"Loading data of patient {self.patientName}" + Fore.WHITE)
         tabTubleSegments = self.getPositiveSegments() + self.getNegativeSegments()
-        print("Shuffle")
-        random.shuffle(tabTubleSegments)
         return tabTubleSegments
 
     @staticmethod
@@ -134,65 +135,4 @@ if __name__ == "__main__":
     pd.set_option('display.float_format', lambda x: '%.9f' % x)
     m172 = patient("MSEL_00172")
     df = m172.getLabeledSegments()
-
-
-    x,y = myLib.processDF(df)
-
-    lenX = len(x)
-    last5Pct = int(lenX * 0.95)
-
-    train_x,train_y = x[:last5Pct],y[:last5Pct]
-    validation_x, validation_y = x[last5Pct:-1], y[last5Pct:-1]
-
-    print(f"train data: {len(train_x)} validation: {len(validation_x)}")
-    print(f"Negatives: {train_y.count(0)}, Positives: {train_y.count(1)}")
-    print(f"VALIDATION Negatives: {validation_y.count(0)}, positves: {validation_y.count(1)}")
-
-    train_x = np.asarray(train_x)
-    train_y = np.asarray(train_y)
-
-    validation_x = np.asarray(validation_x)
-    validation_y = np.asarray(validation_y)
-
-    model = Sequential()
-    model.add(LSTM(128, input_shape=(train_x.shape[1:]), return_sequences=True))
-    model.add(Dropout(0.2))
-    model.add(BatchNormalization())
-
-    model.add(LSTM(128, return_sequences=True))
-    model.add(Dropout(0.1))
-    model.add(BatchNormalization())
-
-    model.add(LSTM(128))
-    model.add(Dropout(0.2))
-    model.add(BatchNormalization())
-
-    model.add(Dense(32, activation='relu'))
-    model.add(Dropout(0.2))
-
-    model.add(Dense(2, activation='softmax'))
-
-    opt = tf.keras.optimizers.Adam(learning_rate=0.001, decay=1e-6)
-
-    # Compile model
-    model.compile(
-        loss='sparse_categorical_crossentropy',
-        optimizer=opt,
-        metrics=['accuracy']
-    )
-
-    tensorboard = TensorBoard(log_dir="logs\{}".format(consts.NAME))
-
-    filepath = "RNN_Final-{epoch:02d}"  # unique file name that will include the epoch and the validation acc for that epoch
-    checkpoint = ModelCheckpoint("models\{}.model".format(filepath, monitor='val_acc', verbose=1, save_best_only=True,
-                                                          mode='max'))  # saves only the best ones
-
-    # Train model
-    history = model.fit(
-        train_x, train_y,
-        batch_size=consts.BATCH_SIZE,
-        epochs=consts.EPOCHS,
-        validation_data=(validation_x, validation_y),
-        callbacks=[tensorboard, checkpoint],
-    )
 

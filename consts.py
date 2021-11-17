@@ -40,6 +40,10 @@ Start offset in s
 '''
 OFFSET = 60
 
+trainPatients = ["MSEL_00172","MSEL_01838"]
+validationPatients = ["MSEL_01838"]
+testPatients = ["MSEL_01808"]
+
 
 EPOCHS = 10
 BATCH_SIZE = 64

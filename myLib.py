@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import re
 from sklearn import preprocessing
+import tensorflow as tf
 import numpy as np
 
 oldDirLoc = ""
@@ -45,56 +46,16 @@ def readParuet(fileLoc):
 # TODO finish impl
 def processDF(tab):
     """
-    :param tab: The dataframe to flatten
-    :param size: Amount of columns to flatten, Nano = len(df)
-    :return: A df with time1 time2 time3
+    :param tab: array lie [(df1,t1),(df3,t3),(df3,t3)]
+    :return: A x
     """
-
-
-    scaler = preprocessing.StandardScaler()
-    min_max = preprocessing.MinMaxScaler()
-
-    sequential_data = []
-
-    for df, t in tab:
-        #Normalize
-        scaled_df = min_max.fit_transform(df.values)
-        final_df = pd.DataFrame(scaled_df, columns=df.columns)
-        #Scale
-        scaled_df = scaler.fit_transform(final_df)
-        scaled_df = pd.DataFrame(scaled_df, columns=final_df.columns)
-        scaled_df.dropna(inplace=True)
-
-        sequential_data.append(([i for i in df.values],t))
-
-    random.shuffle(sequential_data)
-
-    positve = []
-    negative = []
-
-    for seq,target in sequential_data:
-        if target == 0:
-            negative.append([seq,target])
-        else:
-            positve.append([seq,target])
-
-    random.shuffle(positve)
-    random.shuffle(negative)
-
-    # TODO find out if this good
-    lower = min(len(positve),len(negative))
-    #Makes the dataset 50/50
-    positve = positve[:lower]
-    negative = negative[:lower]
-
-    sequential_data = positve + negative
-    random.shuffle(sequential_data)
-
-    x=[]
-    y=[]
-    for seq, target in sequential_data:
-        x.append(seq)
-        y.append(target)
+    # normalize
+    random.shuffle(tab)
+    x = []
+    y = np.array([])
+    for f, t in tab:
+        x.append(tf.keras.utils.normalize(np.array(f), axis=1))
+        y = np.append(y, np.uint8(t))
     return np.array(x),y
 
 
