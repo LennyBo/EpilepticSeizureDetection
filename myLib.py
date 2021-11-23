@@ -1,3 +1,4 @@
+import math
 import random
 import time
 import os
@@ -44,6 +45,7 @@ def readParuet(fileLoc):
     df.rename(columns={"data" : match[0]}, inplace = True)
     return df
 
+
 scaler = StandardScaler()
 
 # TODO finish impl
@@ -52,19 +54,22 @@ def processDF(tab):
     :param tab: array lie [(df1,t1),(df3,t3),(df3,t3)]
     :return: A x
     """
-    # normalize
-
     random.shuffle(tab)
     x = []
     y = np.array([])
-    for f, t in tab:
-        try:
-            x.append(scaler.transform(np.array(f)))
-        except NotFittedError:
-            print("Fitting")
-            x.append(scaler.fit_transform(np.array(f)))
+    for df, t in tab:
+        xTemp = np.array(df).flatten()
+        nans = np.isnan(xTemp)
+        xTemp[nans] = 0 # replace nan with 0
+        math.log(1)
+        x.append(xTemp)
         y = np.append(y, np.uint8(t))
-    return np.array(x),y
+    try:
+        x = scaler.transform(x)
+    except NotFittedError:
+        x = scaler.fit_transform(x)
+
+    return np.array(x).clip(-5,5),y
 
 
 

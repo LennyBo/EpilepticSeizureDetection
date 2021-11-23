@@ -7,12 +7,11 @@ import numpy as np
 from tqdm import tqdm
 from colorama import Fore
 
+from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, LSTM, BatchNormalization
-from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint
 
 import myLib
+
 
 
 class patient:
@@ -33,21 +32,42 @@ class patient:
         self.startTime = self.channels[0].startTime  # As far as I can gather, all startTimes are equal
         self.stopTime = self.channels[0].stopTime  # Not all stopTimes are the same
 
+    def getSegmentFromChannels(self,ts):
+        buildDF = pd.DataFrame()
+        for c in self.channels:
+            df = c.getSegment(ts)
+            if df is not None:
+                buildDF = self.join(buildDF, df)
+            else:
+                buildDF = None
+                # print("Detected missing data")
+                break
+        return buildDF
+
+    def getNegativesN(self,n):
+        tabSegments = []
+        endTime = int(self.fromTS2S(self.stopTime) - consts.OFFSET)
+        s = consts.OFFSET
+        while len(tabSegments) != n: # Maybe raise error if s > endTime???
+            currTs = self.fromS2TS(s)
+            if self.isCloseTooPositve(currTs):
+                # print(f"\n" + Fore.YELLOW + f"{s} seconds is too close to a positve label.\nSkipping to next timestamp")
+                pass
+            else:
+                df = self.getSegmentFromChannels(currTs)
+                if df is not None:
+                    tabSegments.append((df, 0))
+            s += consts.WINDOW_SIZE
+            if s > endTime:
+                raise IndexError
+        return tabSegments
 
     def getPositiveSegments(self):
         tabSegments = []
         for ts in self.labels["labels.startTime"]: # Loop through the timestamps that were labeled as a seizure
-            buildDF = pd.DataFrame()
-            for c in self.channels:
-                df = c.getSegment(ts)
-                if df is not None:
-                    buildDF = self.join(buildDF,df)
-                else:
-                    buildDF = None
-                    #print("Detected missing data")
-                    break
-            if buildDF is not None:
-                tabSegments.append((buildDF,1))
+            df = self.getSegmentFromChannels(ts)
+            if df is not None:
+                tabSegments.append((df,1))
         return tabSegments
 
     def getNegativeSegments(self):
@@ -59,19 +79,10 @@ class patient:
                 #print(f"\n" + Fore.YELLOW + f"{s} seconds is too close to a positve label.\nSkipping to next timestamp")
                 pass
             else:
-                buildDF = pd.DataFrame()
-                for c in self.channels:
-                    df = c.getSegment(currTs)
-                    if df is not None:
-                        buildDF = self.join(buildDF, df)
-                    else:
-                        buildDF = None
-                        #print("Detected missing data")
-                        break
-                if buildDF is not None:
-                    tabSegments.append((buildDF,0))
+                df = self.getSegmentFromChannels(currTs)
+                if df is not None:
+                    tabSegments.append((df, 0))
         return tabSegments
-
 
     def getLabeledSegments(self):
         print(Fore.BLUE + f"Loading data of patient {self.patientName}" + Fore.WHITE)
@@ -135,5 +146,16 @@ class patient:
 if __name__ == "__main__":
     pd.set_option('display.float_format', lambda x: '%.9f' % x)
     m172 = patient("MSEL_00501")
+    df = m172.getNegativesN(10)
+    print(df)
+    exit()
+
     df = m172.getLabeledSegments()
+    x,y = myLib.processDF(df)
+    scaler = StandardScaler()
+    print(x[0])
+    x = tf.keras.utils.normalize(x)
+
+    print(x[0])
+
 
