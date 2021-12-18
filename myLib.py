@@ -10,6 +10,7 @@ from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
 import numpy as np
 import consts as c
+import patient as p
 
 oldDirLoc = ""
 """
@@ -81,6 +82,25 @@ def safeRun(model,desciption,train,val,x_test,y_test,file="runs.csv"):
         csvfile.to_csv(file,index=False)
     except PermissionError:
         print(f"Error: Could not safe. File {file} is probably open with excel")
+
+
+def getTrainValData():
+    tabSegments = []
+    patient = p.patient(c.validationPatient)
+    pos = patient.getPositiveSegments()
+    neg = patient.getNegativesN(len(pos))
+    tabSegments = tabSegments + pos + neg # add positves
+
+    x_validation,y_validation = processDF(tabSegments)
+
+    tabSegments = []
+    patient = p.patient(c.testPatient)
+    pos = patient.getPositiveSegments()
+    neg = patient.getNegativesN(len(pos))
+    tabSegments = tabSegments + pos + neg # add positves
+    x_test,y_test = processDF(tabSegments)
+
+    return x_test,y_test,x_validation,y_validation
 
 
 def extractFeatures(df):
