@@ -1,11 +1,15 @@
+import math
 import random
 import time
 import os
 import pandas as pd
 import re
-from sklearn import preprocessing
+
+from sklearn.exceptions import NotFittedError
+from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
 import numpy as np
+import consts as c
 
 oldDirLoc = ""
 """
@@ -42,21 +46,85 @@ def readParuet(fileLoc):
     df.rename(columns={"data" : match[0]}, inplace = True)
     return df
 
+def safeRun(model,desciption,train,val,x_test,y_test,file="runs.csv"):
+    import pandas as pd
+    import consts as c
+    from datetime import datetime
 
-# TODO finish impl
-def processDF(tab):
+    evalutation = model.evaluate(x_test,y_test,verbose=False)
+    try:
+        csvfile = pd.read_csv('runs.csv', encoding='utf-8')
+    except FileNotFoundError:
+        csvfile = pd.DataFrame();
+    newData = {
+        "date": datetime.now().strftime("%d.%m.%Y %H:%M") ,
+        "description": desciption,
+        "Train_Data_Length": len(train) ,
+        "Val_Data_Length": len(val) ,
+        "Test_Data_Length": len(x_test) ,
+        "loss": round(evalutation[0],3) ,
+        "fp": round(evalutation[1],3) ,
+        "fn": round(evalutation[2],3) ,
+        "acc": round(evalutation[3],3) ,
+        "EPOCHS": c.EPOCHS ,
+        "BATCH_SIZE": c.BATCH_SIZE ,
+        "PREPREDICTION_LENGTH": c.PREPREDICTION_LENGTH ,
+        "OFFSET": c.OFFSET ,
+        "POSITVE_INTERSECT_SIZE":c.POSITVE_INTERSECT_SIZE,
+        "WINDOW_SIZE": c.WINDOW_SIZE ,
+        "POSTIVE_EXTRACT_INTERVAL": c.POSTIVE_EXTRACT_INTERVAL ,
+        "POSITIVE_EXRTACT_END_OFFSET": c.POSITIVE_EXRTACT_END_OFFSET,
+        "CHANNELS": " ".join([shortName for fullName,shortName in c.CHANNELS])
+        }
+    csvfile = csvfile.append(newData,ignore_index=True)
+    try:
+        csvfile.to_csv(file,index=False)
+    except PermissionError:
+        print(f"Error: Could not safe. File {file} is probably open with excel")
+
+
+def extractFeatures(df):
+    start = int(df.index[0]) # First ts
+    stop = int(df.index[-1]) # Last ts
+    step = c.FEATURE_WINDOW_SIZE * 1000
+    buildDF = None
+    for i in range(start,stop,step):
+        tempDF = df[(i <= df.index) & (i + step > df.index)].describe().transpose().reset_index()
+        tempDF.drop(["count","index"], axis=1, inplace=True)
+        if buildDF is None:
+            buildDF = tempDF
+        else:
+            buildDF = buildDF.append(tempDF)
+    return buildDF
+
+scaler = StandardScaler()
+
+def processDF(tab,transformFeatures=False):
     """
     :param tab: array lie [(df1,t1),(df3,t3),(df3,t3)]
     :return: A x
     """
-    # normalize
     random.shuffle(tab)
     x = []
     y = np.array([])
-    for f, t in tab:
-        x.append(tf.keras.utils.normalize(np.array(f), axis=1))
+    counter = 0
+    for df, t in tab:
+        if not transformFeatures:
+            xTemp = np.array(df.fillna(method="backfill").fillna(method="ffill").fillna(0)).flatten()
+        else:
+            xTemp = np.array(extractFeatures(df).fillna(method="backfill").fillna(method="ffill").fillna(0)).flatten()
+        #math.log(1)
+        x.append(xTemp)
         y = np.append(y, np.uint8(t))
-    return np.array(x),y
+        counter += 1
+
+    sizes = [len(n) for n in x]
+    try:
+        x = scaler.transform(x)
+    except NotFittedError:
+        x = scaler.fit_transform(x)
+
+    return np.array(x).clip(-5,5),y
 
 
 

@@ -46,10 +46,12 @@ class channel:
 
         :return: a segment of data from start to stop None if there is a hole in the data
         '''
+        
         tempDF = self.metadata[(start < self.metadata["segments.stopTime"])
                                & (stop >= self.metadata["segments.startTime"])]
 
         #print(tempDF[["segments.startTime", "segments.stopTime"]])
+        
         if self.isContinuous(tempDF): #and len(tempDF) > 0
             # Load all the file and return the df cut at the right place
             buildDF = pd.DataFrame()
