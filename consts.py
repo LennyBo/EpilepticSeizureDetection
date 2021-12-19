@@ -1,6 +1,5 @@
 DATA_LOC = r"..\data"
 
-#This is
 """
 channels = [(r"Empatica-ACC", r"Acc x"),
             (r"Empatica-ACC", r"Acc y"),

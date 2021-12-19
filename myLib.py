@@ -85,6 +85,19 @@ def safeRun(model,desciption,train,val,x_test,y_test,file="runs.csv"):
 
 
 def getTrainValData():
+    """
+    Will always get the same amount of segments from the same timsetamps for test and val set
+    """
+    # Safe the constants
+    t_OFFSET = c.OFFSET
+    t_POSITVE_INTERSECT_SIZE = c.POSITVE_INTERSECT_SIZE
+    t_WINDOW_SIZE = c.WINDOW_SIZE
+
+    
+    c.OFFSET = 1000
+    c.POSITVE_INTERSECT_SIZE = 65
+    c.WINDOW_SIZE = 1000
+
     tabSegments = []
     patient = p.patient(c.validationPatient)
     pos = patient.getPositiveSegments()
@@ -99,6 +112,10 @@ def getTrainValData():
     neg = patient.getNegativesN(len(pos))
     tabSegments = tabSegments + pos + neg # add positves
     x_test,y_test = processDF(tabSegments)
+
+    c.OFFSET = t_OFFSET
+    c.POSITVE_INTERSECT_SIZE = t_POSITVE_INTERSECT_SIZE
+    c.WINDOW_SIZE = t_WINDOW_SIZE
 
     return x_test,y_test,x_validation,y_validation
 
