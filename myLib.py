@@ -77,7 +77,7 @@ def safeRun(model,desciption,train,val,x_test,y_test,file="runs.csv"):
         "POSITIVE_EXRTACT_END_OFFSET": c.POSITIVE_EXRTACT_END_OFFSET,
         "CHANNELS": " ".join([shortName for fullName,shortName in c.CHANNELS]),
         "Train_patients" : " ".join([name[5:len(c.validationPatient)] for name in c.trainPatients]),
-        "Val_patient" : c.validationPatientname[5:len(c.validationPatientname)],
+        "Val_patient" : c.validationPatient[5:len(c.validationPatient)],
         "Test_patient": c.testPatient[5:len(c.testPatient)],
         }
     csvfile = csvfile.append(newData,ignore_index=True)
