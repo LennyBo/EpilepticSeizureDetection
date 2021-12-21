@@ -54,7 +54,7 @@ def safeRun(model,desciption,train,val,x_test,y_test,file="runs.csv"):
 
     evalutation = model.evaluate(x_test,y_test,verbose=False)
     try:
-        csvfile = pd.read_csv('runs.csv', encoding='utf-8')
+        csvfile = pd.read_csv(file, encoding='utf-8')
     except FileNotFoundError:
         csvfile = pd.DataFrame();
     newData = {
