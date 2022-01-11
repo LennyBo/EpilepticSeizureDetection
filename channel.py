@@ -5,7 +5,6 @@ import consts
 
 
 class channel:
-
     def __init__(self, patient, channelDir, channel):
         self.patient = patient
         self.patientFolder = f"{consts.DATA_LOC}\\{patient}\\"
@@ -109,21 +108,3 @@ class channel:
                     return False
             except KeyError:
                 return True
-
-
-# ----------------------------------#
-if __name__ == "__main__":
-    pd.set_option('display.float_format', lambda x: '%.9f' % x)
-    c = channel("MSEL_01808", "Empatica-EDA", "EDA")
-    # c.metadata.to_csv(r'test.csv', index=None, sep=',', mode='w')
-    df = c.getPositiveSegments()
-    for f in df:
-        print(len(f))
-        #f.plot()
-    plt.show()
-    exit()
-    df = c.getDataSeconds(120,240)
-
-    #df = c.getData(1556347299250, 1556350893020)
-    df.plot()
-    plt.show()

@@ -26,14 +26,11 @@ class patient:
             self.labels["labels.startTime"][x] + self.labels["labels.duration"][x]
             for x in range(len(self.labels))]
         # Drop the useless columns
-        
-
         self.labels.drop(self.labels.columns.difference(
             ["labels.duration", "labels.note", "labels.startTime","labels.stopTime"]), axis=1, inplace=True)
 
         for cStr in consts.CHANNELS:
             self.channels.append(c.channel(patientName,cStr[0],cStr[1]))
-            #print(f"{self.channels[-1].startTime} - {self.channels[-1].stopTime} {cStr[1]}")
         self.startTime = self.channels[0].startTime  # As far as I can gather, all startTimes are equal
         self.stopTime = self.channels[0].stopTime  # Not all stopTimes are the same
 
@@ -143,7 +140,7 @@ class patient:
         return buildDF
 
 
-    def isCloseTooPositve(self, timestamp):
+    def isCloseToPositve(self, timestamp):
         '''
         :param timestamp: A timestamp to test
         :return: True if it is close, false if not
@@ -168,57 +165,3 @@ class patient:
         :return: The amount of time since start in seconds
         '''
         return (TS - self.startTime) / 1000
-
-
-
-
-
-if __name__ == "__main__":
-    import consts
-    consts.WINDOW_SIZE = consts.PREPREDICTION_LENGTH + 5
-    tabSegments = []
-    for pStr in consts.trainPatients:
-        p = patient(pStr)
-        pos = p.getPositveSegmentsAdvanced()
-        neg = p.getNegativesN(len(pos))
-        tabSegments = tabSegments + pos + neg  # add positves
-        # tabSegments = tabSegments + patient.getNegativesN(len(tabSegments[-1][0]))
-
-    shapes = [x.shape for x,t in tabSegments]
-
-    x_train, y_train = myLib.processDF(tabSegments)
-
-    tabSegments = []
-    p = patient(consts.validationPatient)
-    pos = p.getPositveSegmentsAdvanced()
-    neg = p.getNegativesN(len(pos))
-    tabSegments = tabSegments + pos + neg  # add positves
-
-    x_validation, y_validation = myLib.processDF(tabSegments)
-
-    tabSegments = []
-    p = patient(consts.testPatient)
-    pos = p.getPositveSegmentsAdvanced()
-    neg = p.getNegativesN(len(pos))
-    tabSegments = tabSegments + pos + neg  # add positves
-    x_test, y_test = myLib.processDF(tabSegments)
-
-    exit()
-    pd.set_option('display.float_format', lambda x: '%.9f' % x)
-    m172 = patient("MSEL_00501")
-    df = m172.getPositveSegmentsAdvanced()
-    myLib.processDF(df)
-    print(len(df))
-    #df = m172.getNegativesN(10)
-    #print(df)
-    exit()
-
-    df = m172.getLabeledSegments()
-    x,y = myLib.processDF(df)
-    scaler = StandardScaler()
-    print(x[0])
-    x = tf.keras.utils.normalize(x)
-
-    print(x[0])
-
-
