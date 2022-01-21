@@ -1,21 +1,13 @@
 import pandas as pd
 import channel as c
 import consts
-import matplotlib.pyplot as plt
-import numpy as np
 
-from tqdm import tqdm
 from colorama import Fore
 
-from sklearn.preprocessing import StandardScaler
-import tensorflow as tf
-
-import myLib
 
 
 
 class patient:
-
 
     def __init__(self,patientName):
         self.patientName = patientName
@@ -35,6 +27,11 @@ class patient:
         self.stopTime = self.channels[0].stopTime  # Not all stopTimes are the same
 
     def getSegmentFromChannels(self,ts):
+        """
+        :param ts: A TimeStamp in ms
+        :return: If data is ok : A df with index timestamp and each column that data from one channel
+                 Else: None
+        """
         buildDF = pd.DataFrame()
         for c in self.channels:
             df = c.getSegment(ts)
@@ -52,12 +49,17 @@ class patient:
         return buildDF
 
     def getNegativesN(self,n):
+        """
+        :param n: Number negative segments to return
+        :return: Array with count = n of tubles (data,0) the 0 means not a seizure
+                Raises exeption if n is too big for the settings
+        """
         tabSegments = []
         endTime = int(self.fromTS2S(self.stopTime) - consts.OFFSET)
         s = consts.OFFSET
         while len(tabSegments) != n: # Maybe raise error if s > endTime???
             currTs = self.fromS2TS(s)
-            if self.isCloseTooPositve(currTs):
+            if self.isCloseToPositve(currTs):
                 # print(f"\n" + Fore.YELLOW + f"{s} seconds is too close to a positve label.\nSkipping to next timestamp")
                 pass
             else:
@@ -70,6 +72,10 @@ class patient:
         return tabSegments
 
     def getPositiveSegments(self):
+        """
+        All segments that resulted in an immediate seizure
+        :return: array of tuples (data,1)
+        """
         tabSegments = []
         for ts in self.labels["labels.startTime"]: # Loop through the timestamps that were labeled as a seizure
             df = self.getSegmentFromChannels(ts)
@@ -78,6 +84,10 @@ class patient:
         return tabSegments
 
     def getPositveSegmentsAdvanced(self):
+        """
+        Will extract more positive segments. Loops through the duration of a seizure to extract more and to get more data
+        :return: array of tuples (data,1)
+        """
         tabSegments = []
         for i,row in self.labels.iterrows():
             #print(row["labels.startTime"])
@@ -92,11 +102,15 @@ class patient:
         return tabSegments
 
     def getNegativeSegments(self):
+        """
+        Will loop thourgh the channels to extract as much negative segments as possible
+        :return: array of tuples (data,0)
+        """
         tabSegments = []
         endTime = int(self.fromTS2S(self.stopTime) - consts.OFFSET)
-        for s in tqdm(range(consts.OFFSET,endTime,consts.WINDOW_SIZE)): # Iterates over the dataset in window_size (s) jumps
+        for s in range(consts.OFFSET,endTime,consts.WINDOW_SIZE): # Iterates over the dataset in window_size (s) jumps
             currTs = self.fromS2TS(s)
-            if self.isCloseTooPositve(currTs):
+            if self.isCloseToPositve(currTs):
                 #print(f"\n" + Fore.YELLOW + f"{s} seconds is too close to a positve label.\nSkipping to next timestamp")
                 pass
             else:
@@ -105,13 +119,12 @@ class patient:
                     tabSegments.append((df, 0))
         return tabSegments
 
-    def getLabeledSegments(self):
-        print(Fore.BLUE + f"Loading data of patient {self.patientName}" + Fore.WHITE)
-        tabTubleSegments = self.getPositiveSegments() + self.getNegativeSegments()
-        return tabTubleSegments
-
     @staticmethod
     def join(buildDF,joinDF):
+        """
+        Joins 2 dataframe together
+        :return: Joined dataframe if data is ok. None if not
+        """
         if joinDF is None:  # if there is a hole in this channel
             return None
         if buildDF.empty:
@@ -120,7 +133,11 @@ class patient:
             return buildDF.join(joinDF)
 
     def getDataSliceTS(self, start, stop):
-        
+        """
+        :param start: Start timestamp
+        :param stop: Stop timestamp
+        :return: Extracts a segments from start to stop. Returns None if there is missing data
+        """
         buildDF = pd.DataFrame()
         for c in self.channels:
             dataC = c.getData(start,stop)
@@ -133,6 +150,11 @@ class patient:
         return buildDF
 
     def getDataSliceS(self, start, duration):
+        """
+        :param start: Start in seconds
+        :param duration: Duration in seconds
+        :return: Extracts a segments from start to start + duration. Returns None if there is missing data
+        """
         buildDF = pd.DataFrame()
         for c in self.channels:
             dataC = c.getDataSeconds(start,duration)
@@ -165,3 +187,12 @@ class patient:
         :return: The amount of time since start in seconds
         '''
         return (TS - self.startTime) / 1000
+
+
+if __name__=="__main__":
+    p = patient("MSEL_00172")
+    arrayTuples = p.getNegativesN(4)
+    data, target = arrayTuples[0]
+    print(data)
+    
+

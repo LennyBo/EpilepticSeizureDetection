@@ -88,7 +88,7 @@ class channel:
 
     def fromTS2S(self, TS):
         '''
-        :param s: A TimeStamp in ms
+        :param Ts: A TimeStamp in ms
         :return: The amount of time since start in seconds
         '''
         return (TS - self.startTime) / 1000
@@ -108,3 +108,4 @@ class channel:
                     return False
             except KeyError:
                 return True
+
