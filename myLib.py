@@ -32,20 +32,7 @@ def timeFunc(func):
     wrapper.__dict__.update(func.__dict__)
     return wrapper
 
-def readParuet(fileLoc):
-    """
 
-    :param fileLoc: Location of the parquest file
-    :return: A df with timestamp, ChannelName
-    """
-    df = pd.read_parquet(fileLoc,engine='pyarrow')
-    df.set_index("time")
-
-    reg = re.compile(r".*_(.+)_segment_\d+.parquet")
-    match = re.findall(reg,fileLoc)
-
-    df.rename(columns={"data" : match[0]}, inplace = True)
-    return df
 
 def safeRun(model,desciption,train,val,x_test,y_test,file="runs.csv"):
     import pandas as pd
@@ -56,7 +43,7 @@ def safeRun(model,desciption,train,val,x_test,y_test,file="runs.csv"):
     try:
         csvfile = pd.read_csv(file, encoding='utf-8')
     except FileNotFoundError:
-        csvfile = pd.DataFrame();
+        csvfile = pd.DataFrame()
     newData = {
         "date": datetime.now().strftime("%d.%m.%Y %H:%M") ,
         "description": desciption,
@@ -76,9 +63,9 @@ def safeRun(model,desciption,train,val,x_test,y_test,file="runs.csv"):
         "POSTIVE_EXTRACT_INTERVAL": c.POSTIVE_EXTRACT_INTERVAL ,
         "POSITIVE_EXRTACT_END_OFFSET": c.POSITIVE_EXRTACT_END_OFFSET,
         "CHANNELS": " ".join([shortName for fullName,shortName in c.CHANNELS]),
-        "Train_patients" : " ".join([name[5:len(c.validationPatient)] for name in c.trainPatients]),
-        "Val_patient" : c.validationPatient[5:len(c.validationPatient)],
-        "Test_patient": c.testPatient[5:len(c.testPatient)],
+        "Train_patients" : c.trainPatients,
+        "Val_patient" : c.validationPatient,
+        "Test_patient": c.testPatient,
         }
     csvfile = csvfile.append(newData,ignore_index=True)
     try:
@@ -102,18 +89,20 @@ def getTrainValData():
     c.WINDOW_SIZE = 1000
 
     tabSegments = []
-    patient = p.patient(c.validationPatient)
-    pos = patient.getPositiveSegments()
-    neg = patient.getNegativesN(len(pos))
-    tabSegments = tabSegments + pos + neg # add positves
+    for pStr in c.validationPatient:
+        patient = p.patient(pStr)
+        pos = patient.getPositiveSegments()
+        neg = patient.getNegativesN(len(pos))
+        tabSegments = tabSegments + pos + neg # add positves
 
     x_validation,y_validation = processDF(tabSegments)
 
     tabSegments = []
-    patient = p.patient(c.testPatient)
-    pos = patient.getPositiveSegments()
-    neg = patient.getNegativesN(len(pos))
-    tabSegments = tabSegments + pos + neg # add positves
+    for pStr in c.testPatient:
+        patient = p.patient(pStr)
+        pos = patient.getPositiveSegments()
+        neg = patient.getNegativesN(len(pos))
+        tabSegments = tabSegments + pos + neg # add positves
     x_test,y_test = processDF(tabSegments)
 
     c.OFFSET = t_OFFSET
@@ -165,7 +154,3 @@ def processDF(tab,transformFeatures=False):
         x = scaler.fit_transform(x)
 
     return np.array(x).clip(-5,5),y
-
-
-
-

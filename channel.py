@@ -1,7 +1,7 @@
-import myLib
 import pandas as pd
 import matplotlib.pyplot as plt
 import consts
+import re
 
 
 class channel:
@@ -55,7 +55,7 @@ class channel:
             # Load all the file and return the df cut at the right place
             buildDF = pd.DataFrame()
             for x in tempDF["file"]:
-                segment = myLib.readParuet(x)
+                segment = self.readParuet(x)
                 # print(segment)
                 if buildDF.empty:
                     buildDF = segment
@@ -92,6 +92,22 @@ class channel:
         :return: The amount of time since start in seconds
         '''
         return (TS - self.startTime) / 1000
+    
+    @staticmethod
+    def readParuet(fileLoc):
+        """
+
+        :param fileLoc: Location of the parquest file
+        :return: A df with timestamp, ChannelName
+        """
+        df = pd.read_parquet(fileLoc,engine='pyarrow')
+        df.set_index("time")
+
+        reg = re.compile(r".*_(.+)_segment_\d+.parquet")
+        match = re.findall(reg,fileLoc)
+
+        df.rename(columns={"data" : match[0]}, inplace = True)
+        return df
 
     @staticmethod
     def isContinuous(df):
