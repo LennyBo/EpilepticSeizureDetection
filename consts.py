@@ -18,7 +18,7 @@ CHANNELS = [
 PREPREDICTION_LENGTH = 10 #How much time we want to make a prediction
 OFFSET = 1000 # Start offset in s
 POSITVE_INTERSECT_SIZE = 100 # Will make it so we do not take any data that is within +/- of each positive label to generate a negative one
-WINDOW_SIZE = 100 # Jump size of negative segments
+WINDOW_SIZE = 75 # Jump size of negative segments
 POSTIVE_EXTRACT_INTERVAL = 20 # the time interval between labels.starttime and labels.stoptime we extract postive segments
 POSITIVE_EXRTACT_END_OFFSET = 30 # This adds an offset to the POSTIVE_EXTRACT_INTERVAL. So with POSTIVE_EXTRACT_INTERVAL=2 and POSITIVE_EXRTACT_END_OFFSET=20 with a 60 second long seizure, we would get (60-20)/1 = 20 segments
 #"MSEL_01839" "MSEL_01859" "MSEL_01860"
