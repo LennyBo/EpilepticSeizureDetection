@@ -1,13 +1,8 @@
-import math
 import random
 import time
-import os
-import pandas as pd
-import re
 
 from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import StandardScaler
-import tensorflow as tf
 import numpy as np
 import consts as c
 import patient as p

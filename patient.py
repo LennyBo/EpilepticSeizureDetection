@@ -2,8 +2,6 @@ import pandas as pd
 import channel as c
 import consts
 
-from colorama import Fore
-
 
 
 
