@@ -22,3 +22,7 @@
 
 This will load the data, train a model and save the results in a .csv file.
 Choose the name of the csv file at the bottom of the notebook.
+
+
+
+Checkout the [wiki](https://github.com/LennyBo/EpilepticSeizureDetection/wiki) for more information 
